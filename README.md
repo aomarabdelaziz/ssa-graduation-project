@@ -14,7 +14,6 @@
 6. [Monitoring and Alerts](#monitoring-and-alerts)
 7. [Security Best Practices](#security-best-practices)
 8. [Cost Optimization](#cost-optimization)
-9. [Project Structure](#project-structure)
 10. [Learning Outcomes](#learning-outcomes)
 
 
