@@ -16,9 +16,7 @@
 8. [Cost Optimization](#cost-optimization)
 9. [Project Structure](#project-structure)
 10. [Learning Outcomes](#learning-outcomes)
-11. [Useful Links](#useful-links)
-12. [Author](#author)
-13. [Demo](#demo)
+
 
 ---
 
@@ -137,3 +135,10 @@ A Node.js or static web application that should:
 - Use **CloudWatch** to identify underutilized resources.
 
 ---
+
+## 🎓 Learning Outcomes
+
+- Design and implement a fault-tolerant AWS web architecture.
+- Use ALB and ASG for scalability and availability.
+- Monitor and respond to system health issues using CloudWatch and SNS.
+- Understand basic networking and IAM concepts in AWS.
