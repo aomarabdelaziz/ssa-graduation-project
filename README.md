@@ -1,78 +1,139 @@
 # 🏗️ Scalable Web Application on AWS (ALB + Auto Scaling)
 
-> A simple, scalable, and highly available web application architecture using EC2, Application Load Balancer, and Auto Scaling Group (ASG) on AWS.
+> A highly available and scalable web architecture using EC2, ALB, ASG, and optionally Amazon RDS. Integrated with CloudWatch and SNS for monitoring and alerting.
 
 ---
 
-## 📌 Project Description
+## 📚 Table of Contents
 
-This project demonstrates how to build and deploy a scalable web application architecture on AWS using EC2 instances behind an Application Load Balancer (ALB), managed through an Auto Scaling Group (ASG). The system automatically scales based on load and ensures high availability, security, and cost-efficiency.
+1. [Project Overview](#project-overview)
+2. [Architecture Diagram](#architecture-diagram)
+3. [Solution Overview](#solution-overview)
+4. [AWS Services Used](#aws-services-used)
+5. [Deployment Steps](#deployment-steps)
+6. [Monitoring and Alerts](#monitoring-and-alerts)
+7. [Security Best Practices](#security-best-practices)
+8. [Cost Optimization](#cost-optimization)
+9. [Project Structure](#project-structure)
+10. [Learning Outcomes](#learning-outcomes)
+11. [Useful Links](#useful-links)
+12. [Author](#author)
+13. [Demo](#demo)
 
 ---
 
-## 🧩 Architecture Overview
+## 📌 Project Overview
+
+This project showcases a robust, production-ready AWS architecture that auto-scales based on load, distributes traffic evenly across healthy instances, and maintains high availability. This is ideal for web applications expecting fluctuating traffic or requiring fault tolerance.
+
+---
+
+## 🗺️ Architecture Diagram
 
 ![Architecture Diagram](./architecture-diagram.png)
 
-### 🧱 Key Components
+### 🔍 Components Breakdown
 
-- **Amazon EC2**: Hosts the web application (Node.js or static site).
-- **Auto Scaling Group (ASG)**: Automatically adds/removes instances based on demand.
-- **Application Load Balancer (ALB)**: Routes HTTP(S) traffic evenly to healthy instances.
-- **Amazon RDS (Optional)**: Backend relational database.
-- **IAM**: Role-based access control for instances and services.
-- **CloudWatch + SNS**: Monitoring and alerting for health and performance.
+1. **Users**  
+   End-users access the application via a browser.
+
+2. **Internet Gateway**  
+   Provides internet access to the public-facing Application Load Balancer.
+
+3. **Application Load Balancer (ALB)**  
+   Distributes incoming HTTP(S) requests across EC2 instances in multiple Availability Zones for high availability.
+
+4. **Auto Scaling Group (ASG)**  
+   Ensures that the right number of EC2 instances are running based on load. Instances span across **3 Availability Zones** for fault tolerance.
+
+5. **EC2 Instances**  
+   Host the web application. They are deployed in **private subnets** and managed via **role-based IAM access**.
+
+6. **Amazon RDS**  
+   A managed relational database service deployed with Multi-AZ support. One primary instance handles reads/writes; standby replicas ensure high availability.
+
+7. **Amazon CloudWatch**  
+   Monitors performance metrics like CPU utilization and 5XX error counts.
+
+8. **Amazon SNS**  
+   Sends notifications (e.g., email) when CloudWatch alarms are triggered.
 
 ---
 
-## 🛠️ Technologies & AWS Services
+## 🧩 Solution Overview
+
+### 💡 Use Case
+
+A Node.js or static web application that should:
+- Scale during traffic spikes (e.g., sales event)
+- Stay online during instance failure or AZ outage
+- Alert operators on health or performance issues
+
+### 🛠 How It Works
+
+- **ALB** accepts incoming traffic and checks the health of registered EC2 targets.
+- **ASG** maintains the desired number of EC2 instances, replacing unhealthy ones automatically.
+- **CloudWatch** tracks metrics like 5XX errors or CPU > 70%.
+- **SNS** sends alerts to a subscribed email or Lambda handler.
+- **RDS Multi-AZ** handles backend data storage with automatic failover.
+
+---
+
+## 🧰 AWS Services Used
 
 | Service        | Purpose                                  |
 |----------------|-------------------------------------------|
-| EC2            | Hosts the application backend/frontend    |
-| ALB            | Distributes traffic and health checks     |
-| ASG            | Ensures scalability and availability      |
-| RDS            | Stores data (e.g., MySQL or PostgreSQL)   |
-| IAM            | Manages roles and permissions             |
+| EC2            | Runs the web application                  |
+| ALB            | Distributes and balances HTTP(S) traffic  |
+| Auto Scaling   | Dynamically adjusts the number of instances |
+| Amazon RDS     | Backend relational database (Multi-AZ)    |
+| IAM            | Role-based access control                 |
 | CloudWatch     | Logs, metrics, and alarms                 |
-| SNS            | Sends notifications on alarm triggers     |
+| SNS            | Sends notifications for critical events   |
+| VPC/Subnets    | Network isolation and routing             |
+| Internet Gateway | Access to the internet for ALB         |
 
 ---
 
 ## 🚀 Deployment Steps
 
-### ✅ Prerequisites
-
-- AWS CLI configured
-- IAM user with EC2, ALB, ASG, RDS, and IAM permissions
-- SSH key pair for EC2 login
-
----
-
-### 🔧 Infrastructure Setup (Manual or IaC)
-
-#### Option 1: Manual (via AWS Console)
-
-1. Launch an EC2 AMI with your app.
-2. Create a Launch Template for the instance.
-3. Set up a Target Group.
-4. Create an Application Load Balancer.
-5. Set up Auto Scaling Group with min/max/desired capacity.
-6. Attach ALB to the ASG.
-7. Configure health checks and CloudWatch alarms.
-
-#### Option 2: Infrastructure as Code (IaC)
-
-Use [Terraform](https://github.com/) or AWS CloudFormation to automate provisioning.
+1. **Create VPC and Subnets (3 AZs)**
+2. **Launch EC2 Instance & Create Launch Template**
+3. **Create ALB and Target Group**
+4. **Create Auto Scaling Group (min=2, max=5)**
+5. **Set Health Checks and Scaling Policies**
+6. **Deploy RDS in Multi-AZ mode (Optional)**
+7. **Configure IAM Roles and Security Groups**
+8. **Enable CloudWatch Alarms and SNS Alerts**
 
 ---
 
-### 🧪 Sample EC2 Web App (Node.js)
+## 📈 Monitoring and Alerts
 
-```bash
-#!/bin/bash
-yum update -y
-yum install -y httpd
-echo "<h1>Welcome to Scalable App via ALB</h1>" > /var/www/html/index.html
-systemctl enable httpd
-systemctl start httpd
+### CloudWatch Metrics:
+- `CPUUtilization`
+- `HTTPCode_ELB_5XX_Count`
+- `UnhealthyHostCount`
+
+### Example Alarm:
+- Trigger: `5XX errors >= 5 in 1 minute`
+- Action: Publish message to SNS
+- Result: Email alert sent to admin
+
+---
+
+## 🔐 Security Best Practices
+
+- EC2 instances in **private subnets** only.
+- Only ALB is internet-facing (public subnet).
+- Use **IAM roles** instead of hardcoded credentials.
+- Enable **RDS encryption** and use **security groups** to control access.
+---
+
+## 💸 Cost Optimization
+
+- Use **Auto Scaling** for dynamic provisioning.
+- Consider **Spot Instances** for stateless workloads.
+- Use **CloudWatch** to identify underutilized resources.
+
+---
